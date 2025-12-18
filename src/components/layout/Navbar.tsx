@@ -2,18 +2,21 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, MapPin, CalendarDays, User, Leaf } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
-  { href: "/", label: "หน้าแรก", labelEn: "Home" },
-  { href: "/workshops", label: "เวิร์กช็อป", labelEn: "Workshops", icon: CalendarDays },
-  { href: "/map", label: "แผนที่", labelEn: "Map", icon: MapPin },
-  { href: "/about", label: "เกี่ยวกับเรา", labelEn: "About" },
+  { href: "/", labelKey: "home" },
+  { href: "/workshops", labelKey: "workshops", icon: CalendarDays },
+  { href: "/map", labelKey: "map", icon: MapPin },
+  { href: "/about", labelKey: "about" },
 ];
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { t } = useLanguage();
 
   const isActive = (href: string) => location.pathname === href;
 
@@ -56,7 +59,7 @@ export function Navbar() {
                 >
                   <span className="flex items-center gap-1.5">
                     {link.icon && <link.icon className="h-4 w-4" />}
-                    {link.label}
+                    {t(link.labelKey)}
                   </span>
                   {isActive(link.href) && (
                     <span className="absolute bottom-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-primary" />
@@ -67,33 +70,36 @@ export function Navbar() {
 
             {/* Desktop CTA */}
             <div className="hidden items-center gap-3 md:flex">
+              <LanguageSwitcher />
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/login">
                   <User className="h-4 w-4" />
-                  เข้าสู่ระบบ
+                  {t("login")}
                 </Link>
               </Button>
               <Button variant="secondary" size="sm" asChild>
                 <Link to="/workshops">
-                  จองกิจกรรม
+                  {t("bookActivity")}
                 </Link>
               </Button>
             </div>
 
             {/* Mobile Menu Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setIsOpen(!isOpen)}
-              aria-label="Toggle menu"
-            >
-              {isOpen ? (
-                <X className="h-5 w-5" />
-              ) : (
-                <Menu className="h-5 w-5" />
-              )}
-            </Button>
+            <div className="flex items-center gap-2 md:hidden">
+              <LanguageSwitcher />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsOpen(!isOpen)}
+                aria-label="Toggle menu"
+              >
+                {isOpen ? (
+                  <X className="h-5 w-5" />
+                ) : (
+                  <Menu className="h-5 w-5" />
+                )}
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -118,22 +124,19 @@ export function Navbar() {
                 )}
               >
                 {link.icon && <link.icon className="h-4 w-4" />}
-                {link.label}
-                <span className="text-xs text-muted-foreground">
-                  {link.labelEn}
-                </span>
+                {t(link.labelKey)}
               </Link>
             ))}
             <div className="flex gap-2 pt-4">
               <Button variant="outline" size="sm" className="flex-1" asChild>
                 <Link to="/login" onClick={() => setIsOpen(false)}>
                   <User className="h-4 w-4" />
-                  เข้าสู่ระบบ
+                  {t("login")}
                 </Link>
               </Button>
               <Button variant="secondary" size="sm" className="flex-1" asChild>
                 <Link to="/workshops" onClick={() => setIsOpen(false)}>
-                  จองกิจกรรม
+                  {t("bookActivity")}
                 </Link>
               </Button>
             </div>
