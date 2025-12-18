@@ -1,23 +1,155 @@
-import { Link } from "react-router-dom";
-import { MapPin, Store, Phone, Clock, ArrowLeft } from "lucide-react";
+import { useState } from "react";
+import { MapPin, Store } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ShopDetailSheet } from "@/components/map/ShopDetailSheet";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-// Mock data - will be replaced with Supabase data
+// Extended mock data with full details
 const shops = [
-  { id: 1, name: "บ้านคราม", category: "ผ้าย้อมคราม", x: 25, y: 35, description: "ร้านย้อมครามด้วยสีธรรมชาติ 100%" },
-  { id: 2, name: "เรือนดิน", category: "เซรามิค", x: 45, y: 50, description: "งานปั้นเซรามิคด้วยดินท้องถิ่น" },
-  { id: 3, name: "ครัวแม่ศรี", category: "อาหาร", x: 65, y: 30, description: "อาหารล้านนาแท้ๆ" },
-  { id: 4, name: "สวนผึ้ง", category: "น้ำผึ้ง", x: 75, y: 65, description: "น้ำผึ้งจากฟาร์มผึ้งในชุมชน" },
-  { id: 5, name: "บ้านกระดาษสา", category: "งานกระดาษ", x: 35, y: 70, description: "กระดาษสาทำมือ" },
-  { id: 6, name: "สวนสีเขียว", category: "ผ้าและสิ่งทอ", x: 55, y: 45, description: "Eco-printing และผ้าย้อมธรรมชาติ" },
-  { id: 7, name: "บ้านขนมยาย", category: "อาหาร", x: 40, y: 25, description: "ขนมไทยโบราณ" },
-  { id: 8, name: "ร้านกาแฟริมคาว", category: "เครื่องดื่ม", x: 60, y: 75, description: "กาแฟคั่วมือ บรรยากาศริมน้ำ" },
+  { 
+    id: 1, 
+    name: "บ้านคราม", 
+    nameEn: "Kram House",
+    category: "ผ้าย้อมคราม", 
+    categoryEn: "Indigo Dye",
+    x: 25, 
+    y: 35, 
+    description: "ร้านย้อมครามด้วยสีธรรมชาติ 100% สืบทอดภูมิปัญญาการย้อมครามแบบดั้งเดิมจากบรรพบุรุษมากว่า 3 รุ่น ทุกผลิตภัณฑ์ทำมือทุกขั้นตอน",
+    descriptionEn: "100% natural indigo dye shop, preserving traditional dyeing wisdom passed down for over 3 generations. Every product is handmade in all stages.",
+    openHours: "09:00 - 17:00",
+    phone: "081-234-5678",
+    address: "123 หมู่ 5 ต.โหล่งฮิมคาว อ.สันป่าตอง จ.เชียงใหม่",
+    addressEn: "123 Moo 5, Long Him Kow, San Pa Tong, Chiang Mai",
+    highlights: ["ย้อมครามธรรมชาติ 100%", "เวิร์กช็อปย้อมผ้าด้วยมือ", "ผลิตภัณฑ์ผ้าคราม"],
+    highlightsEn: ["100% natural indigo dye", "Hands-on fabric dyeing workshop", "Indigo fabric products"]
+  },
+  { 
+    id: 2, 
+    name: "เรือนดิน", 
+    nameEn: "Din House",
+    category: "เซรามิค", 
+    categoryEn: "Ceramics",
+    x: 45, 
+    y: 50, 
+    description: "งานปั้นเซรามิคด้วยดินท้องถิ่น ผสมผสานศิลปะล้านนาดั้งเดิมกับดีไซน์ร่วมสมัย",
+    descriptionEn: "Ceramic art using local clay, blending traditional Lanna art with contemporary design.",
+    openHours: "10:00 - 18:00",
+    phone: "082-345-6789",
+    address: "45 หมู่ 5 ต.โหล่งฮิมคาว อ.สันป่าตอง จ.เชียงใหม่",
+    addressEn: "45 Moo 5, Long Him Kow, San Pa Tong, Chiang Mai",
+    highlights: ["ปั้นเซรามิคด้วยมือ", "ดินท้องถิ่นคุณภาพ", "ลวดลายล้านนาประยุกต์"],
+    highlightsEn: ["Hand-molded ceramics", "Quality local clay", "Applied Lanna patterns"]
+  },
+  { 
+    id: 3, 
+    name: "ครัวแม่ศรี", 
+    nameEn: "Mae Sri Kitchen",
+    category: "อาหาร", 
+    categoryEn: "Food",
+    x: 65, 
+    y: 30, 
+    description: "อาหารล้านนาแท้ๆ ปรุงจากสูตรโบราณ ใช้วัตถุดิบสดใหม่จากสวนหลังบ้าน",
+    descriptionEn: "Authentic Lanna cuisine cooked from ancient recipes using fresh ingredients from our backyard garden.",
+    openHours: "08:00 - 20:00",
+    phone: "083-456-7890",
+    address: "67 หมู่ 5 ต.โหล่งฮิมคาว อ.สันป่าตอง จ.เชียงใหม่",
+    addressEn: "67 Moo 5, Long Him Kow, San Pa Tong, Chiang Mai",
+    highlights: ["อาหารล้านนาแท้ๆ", "วัตถุดิบออร์แกนิค", "คลาสทำอาหาร"],
+    highlightsEn: ["Authentic Lanna food", "Organic ingredients", "Cooking class available"]
+  },
+  { 
+    id: 4, 
+    name: "สวนผึ้ง", 
+    nameEn: "Bee Garden",
+    category: "น้ำผึ้ง", 
+    categoryEn: "Honey",
+    x: 75, 
+    y: 65, 
+    description: "น้ำผึ้งจากฟาร์มผึ้งในชุมชน บริสุทธิ์ 100% ไม่ผ่านความร้อน",
+    descriptionEn: "Honey from our community bee farm, 100% pure and raw (not heat-treated).",
+    openHours: "09:00 - 16:00",
+    phone: "084-567-8901",
+    address: "89 หมู่ 5 ต.โหล่งฮิมคาว อ.สันป่าตอง จ.เชียงใหม่",
+    addressEn: "89 Moo 5, Long Him Kow, San Pa Tong, Chiang Mai",
+    highlights: ["น้ำผึ้งป่าดอกไม้นานาชนิด", "ชมฟาร์มผึ้ง", "ผลิตภัณฑ์แปรรูปจากน้ำผึ้ง"],
+    highlightsEn: ["Multi-flower wild honey", "Farm tour available", "Honey-based products"]
+  },
+  { 
+    id: 5, 
+    name: "บ้านกระดาษสา", 
+    nameEn: "Sa Paper House",
+    category: "งานกระดาษ", 
+    categoryEn: "Paper Craft",
+    x: 35, 
+    y: 70, 
+    description: "กระดาษสาทำมือ สืบสานงานหัตถกรรมกระดาษสาล้านนา พร้อมเวิร์กช็อปทำกระดาษ",
+    descriptionEn: "Handmade Sa paper, preserving Lanna paper craft traditions with paper-making workshops.",
+    openHours: "09:00 - 17:00",
+    phone: "085-678-9012",
+    address: "35 หมู่ 5 ต.โหล่งฮิมคาว อ.สันป่าตอง จ.เชียงใหม่",
+    addressEn: "35 Moo 5, Long Him Kow, San Pa Tong, Chiang Mai",
+    highlights: ["กระดาษสาทำมือ", "เวิร์กช็อปทำกระดาษ", "ผลิตภัณฑ์กระดาษสา"],
+    highlightsEn: ["Handmade Sa paper", "Paper-making workshop", "Sa paper products"]
+  },
+  { 
+    id: 6, 
+    name: "สวนสีเขียว", 
+    nameEn: "Green Garden",
+    category: "ผ้าและสิ่งทอ", 
+    categoryEn: "Textiles",
+    x: 55, 
+    y: 45, 
+    description: "Eco-printing และผ้าย้อมธรรมชาติ ใช้ใบไม้และดอกไม้จากสวนในการสร้างลวดลายบนผ้า",
+    descriptionEn: "Eco-printing and natural dye textiles, using leaves and flowers from our garden to create patterns on fabric.",
+    openHours: "10:00 - 17:00",
+    phone: "086-789-0123",
+    address: "55 หมู่ 5 ต.โหล่งฮิมคาว อ.สันป่าตอง จ.เชียงใหม่",
+    addressEn: "55 Moo 5, Long Him Kow, San Pa Tong, Chiang Mai",
+    highlights: ["Eco-printing ใบไม้", "ย้อมสีธรรมชาติ", "ผลิตภัณฑ์ผ้าเป็นมิตรกับสิ่งแวดล้อม"],
+    highlightsEn: ["Leaf eco-printing", "Natural dyeing", "Eco-friendly fabric products"]
+  },
+  { 
+    id: 7, 
+    name: "บ้านขนมยาย", 
+    nameEn: "Grandma's Sweets",
+    category: "อาหาร", 
+    categoryEn: "Food",
+    x: 40, 
+    y: 25, 
+    description: "ขนมไทยโบราณ สูตรดั้งเดิมจากยายที่สืบทอดมา ทำสดใหม่ทุกวัน",
+    descriptionEn: "Traditional Thai sweets, authentic recipes passed down from grandma, freshly made daily.",
+    openHours: "07:00 - 15:00",
+    phone: "087-890-1234",
+    address: "40 หมู่ 5 ต.โหล่งฮิมคาว อ.สันป่าตอง จ.เชียงใหม่",
+    addressEn: "40 Moo 5, Long Him Kow, San Pa Tong, Chiang Mai",
+    highlights: ["ขนมไทยโบราณ", "ทำสดใหม่ทุกวัน", "สูตรดั้งเดิม 3 รุ่น"],
+    highlightsEn: ["Traditional Thai sweets", "Freshly made daily", "3-generation recipe"]
+  },
+  { 
+    id: 8, 
+    name: "ร้านกาแฟริมคาว", 
+    nameEn: "Rim Kaw Coffee",
+    category: "เครื่องดื่ม", 
+    categoryEn: "Drinks",
+    x: 60, 
+    y: 75, 
+    description: "กาแฟคั่วมือ เมล็ดกาแฟจากดอยสูงในเชียงใหม่ บรรยากาศริมน้ำคาว",
+    descriptionEn: "Hand-roasted coffee, beans from Chiang Mai highlands, with a scenic riverside atmosphere.",
+    openHours: "08:00 - 18:00",
+    phone: "088-901-2345",
+    address: "60 หมู่ 5 ต.โหล่งฮิมคาว อ.สันป่าตอง จ.เชียงใหม่",
+    addressEn: "60 Moo 5, Long Him Kow, San Pa Tong, Chiang Mai",
+    highlights: ["กาแฟคั่วมือ", "เมล็ดกาแฟดอยสูง", "วิวริมน้ำ"],
+    highlightsEn: ["Hand-roasted coffee", "Highland coffee beans", "Riverside view"]
+  },
 ];
 
 const Map = () => {
+  const [selectedShop, setSelectedShop] = useState<typeof shops[0] | null>(null);
+  const { t, language } = useLanguage();
+
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
@@ -29,13 +161,13 @@ const Map = () => {
             <div className="mx-auto max-w-2xl text-center">
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-sm text-primary">
                 <MapPin className="h-4 w-4" />
-                แผนที่ชุมชน
+                {t("communityMap")}
               </div>
               <h1 className="mb-4 text-3xl font-bold md:text-4xl">
-                สำรวจโหล่งฮิมคาว
+                {t("exploreLHK")}
               </h1>
               <p className="text-muted-foreground">
-                แผนที่แบบอินเทอร์แอคทีฟ แสดงตำแหน่งร้านค้าและจุดที่น่าสนใจในชุมชน
+                {t("mapDescription")}
               </p>
             </div>
           </div>
@@ -83,7 +215,7 @@ const Map = () => {
 
                     {/* River label */}
                     <div className="absolute left-[5%] top-[55%] text-xs text-blue-500/70 font-medium -rotate-12">
-                      แม่น้ำคาว
+                      {t("kawRiver")}
                     </div>
 
                     {/* Shop Pins */}
@@ -92,6 +224,7 @@ const Map = () => {
                         key={shop.id}
                         className="group absolute -translate-x-1/2 -translate-y-full cursor-pointer"
                         style={{ left: `${shop.x}%`, top: `${shop.y}%` }}
+                        onClick={() => setSelectedShop(shop)}
                       >
                         <div className="relative">
                           {/* Pin */}
@@ -100,11 +233,15 @@ const Map = () => {
                           </div>
                           
                           {/* Tooltip */}
-                          <div className="absolute bottom-full left-1/2 mb-3 -translate-x-1/2 w-48 rounded-xl bg-foreground p-3 opacity-0 shadow-lg transition-all duration-200 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto">
-                            <p className="font-semibold text-background">{shop.name}</p>
-                            <p className="text-xs text-background/70 mt-1">{shop.description}</p>
+                          <div className="absolute bottom-full left-1/2 mb-3 -translate-x-1/2 w-48 rounded-xl bg-foreground p-3 opacity-0 shadow-lg transition-all duration-200 group-hover:opacity-100 pointer-events-none">
+                            <p className="font-semibold text-background">
+                              {language === "th" ? shop.name : shop.nameEn}
+                            </p>
+                            <p className="text-xs text-background/70 mt-1 line-clamp-2">
+                              {language === "th" ? shop.description : shop.descriptionEn}
+                            </p>
                             <Badge variant="secondary" className="mt-2 text-xs">
-                              {shop.category}
+                              {language === "th" ? shop.category : shop.categoryEn}
                             </Badge>
                             {/* Arrow */}
                             <div className="absolute left-1/2 top-full -translate-x-1/2 border-8 border-transparent border-t-foreground" />
@@ -121,11 +258,11 @@ const Map = () => {
                   <div className="absolute bottom-4 left-4 rounded-xl bg-background/90 p-3 backdrop-blur-sm text-xs">
                     <div className="flex items-center gap-2 mb-1.5">
                       <div className="h-4 w-4 rounded-full bg-secondary" />
-                      <span className="text-muted-foreground">ร้านค้า/เวิร์กช็อป</span>
+                      <span className="text-muted-foreground">{t("shopWorkshop")}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="h-4 w-6 rounded bg-blue-400/50" />
-                      <span className="text-muted-foreground">แม่น้ำคาว</span>
+                      <span className="text-muted-foreground">{t("kawRiver")}</span>
                     </div>
                   </div>
                 </div>
@@ -134,7 +271,7 @@ const Map = () => {
               {/* Shop List */}
               <div>
                 <h2 className="mb-4 text-lg font-semibold">
-                  ร้านค้าในชุมชน ({shops.length})
+                  {t("shopsInCommunity")} ({shops.length})
                 </h2>
                 <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
                   {shops.map((shop, index) => (
@@ -145,15 +282,18 @@ const Map = () => {
                         animationDelay: `${index * 50}ms`,
                         animationFillMode: "forwards",
                       }}
+                      onClick={() => setSelectedShop(shop)}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <h3 className="font-semibold">{shop.name}</h3>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {shop.description}
+                          <h3 className="font-semibold">
+                            {language === "th" ? shop.name : shop.nameEn}
+                          </h3>
+                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                            {language === "th" ? shop.description : shop.descriptionEn}
                           </p>
                           <Badge variant="outline" className="mt-2 text-xs">
-                            {shop.category}
+                            {language === "th" ? shop.category : shop.categoryEn}
                           </Badge>
                         </div>
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
@@ -169,8 +309,7 @@ const Map = () => {
             {/* Info Note */}
             <div className="mt-8 rounded-2xl border border-border bg-muted/50 p-6 text-center">
               <p className="text-muted-foreground">
-                💡 <span className="font-medium">หมายเหตุ:</span> แผนที่นี้เป็นแผนที่จำลอง 
-                ในเวอร์ชันจริงจะเป็นแผนที่ภาพประกอบของชุมชนที่สวยงาม
+                💡 <span className="font-medium">{t("note")}:</span> {t("mapNote")}
               </p>
             </div>
           </div>
@@ -178,6 +317,13 @@ const Map = () => {
       </main>
 
       <Footer />
+
+      {/* Shop Detail Sheet */}
+      <ShopDetailSheet 
+        shop={selectedShop} 
+        open={!!selectedShop} 
+        onClose={() => setSelectedShop(null)} 
+      />
     </div>
   );
 };
